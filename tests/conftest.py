@@ -3,10 +3,11 @@ import os
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-# Tests run against a dedicated test database on the compose Postgres.
+# Tests run against a DEDICATED test database on the compose Postgres, never the
+# app database — the fixture does drop_all on teardown, so isolation is mandatory.
 TEST_DB_URL = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://agent:agent@localhost:5432/email_agent",
+    "postgresql+asyncpg://agent:agent@localhost:5432/email_agent_test",
 )
 
 

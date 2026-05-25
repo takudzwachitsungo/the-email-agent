@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from sqlalchemy import DateTime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,8 +21,12 @@ class ProcessedMessage(Base):
     draft_id: Mapped[str | None] = mapped_column(default=None)
     status: Mapped[str] = mapped_column(default="pending")
     error: Mapped[str | None] = mapped_column(default=None)
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
 
 class StateRepository:
