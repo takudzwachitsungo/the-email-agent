@@ -1,0 +1,15 @@
+{
+  "id": "m-human",
+  "threadId": "t-human",
+  "labelIds": ["INBOX", "UNREAD"],
+  "snippet": "Quick question about Tuesday",
+  "payload": {
+    "headers": [
+      {"name": "From", "value": "Jane Doe <jane@example.com>"},
+      {"name": "To", "value": "me@example.com"},
+      {"name": "Subject", "value": "Are we still on for Tuesday?"}
+    ],
+    "mimeType": "text/plain",
+    "body": {"data": "SGV5IFRrLCBhcmUgd2Ugc3RpbGwgb24gZm9yIFR1ZXNkYXk_"}
+  }
+}

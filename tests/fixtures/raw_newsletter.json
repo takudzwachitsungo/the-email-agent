@@ -1,0 +1,18 @@
+{
+  "id": "m-news",
+  "threadId": "t-news",
+  "labelIds": ["INBOX", "UNREAD", "CATEGORY_PROMOTIONS"],
+  "snippet": "This week in tech",
+  "payload": {
+    "headers": [
+      {"name": "From", "value": "Tech Weekly <no-reply@news.example.com>"},
+      {"name": "Subject", "value": "This week in tech"},
+      {"name": "List-Unsubscribe", "value": "<mailto:unsub@news.example.com>"},
+      {"name": "Precedence", "value": "bulk"}
+    ],
+    "mimeType": "multipart/alternative",
+    "parts": [
+      {"mimeType": "text/plain", "body": {"data": "TG90cyBvZiBuZXdz"}}
+    ]
+  }
+}
