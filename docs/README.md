@@ -14,6 +14,13 @@ anything is sent — earning its way toward handling routine email on its own.
 | 04 | [Data Model](04-data-model.md) | PostgreSQL schema, the approval state machine, the three-layer memory model and its upgrade path |
 | 05 | [Roadmap](05-roadmap.md) | Phased delivery: core loop → approval → memory & autonomy |
 
+## New to AI agents? Start here
+
+[**docs/guides/**](guides/README.md) — beginner-friendly explainers: what an AI
+agent is, the five ingredients you need to build one, how this project maps to
+them, and a glossary. Includes the system architecture diagram
+([editable on Excalidraw](https://excalidraw.com/#json=PE3dr7wh2dwVPGzW10p4x,DHC7KShWaN1whRo4mcpMhw)).
+
 ## One-paragraph summary
 
 The system is a **linear pipeline of swappable stages** — plain code for the agent
