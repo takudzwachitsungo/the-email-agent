@@ -1,0 +1,16 @@
+- subject: "Are we still on for Tuesday?"
+  sender: "jane@example.com"
+  body: "Hey, can you confirm Tuesday 3pm still works?"
+  expect_reply: true
+- subject: "Your receipt from Acme"
+  sender: "receipts@acme.com"
+  body: "Thanks for your purchase. This is an automated receipt."
+  expect_reply: false
+- subject: "This week in tech"
+  sender: "news@digest.example.com"
+  body: "Top stories this week. Unsubscribe any time."
+  expect_reply: false
+- subject: "Quick favor"
+  sender: "colleague@example.com"
+  body: "Could you review my doc before Friday?"
+  expect_reply: true
