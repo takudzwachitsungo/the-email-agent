@@ -1,0 +1,12 @@
+# Editable behavior. No secrets here.
+persona:
+  name: "Takudzwa"
+  sign_off: "Best,\nTakudzwa"
+  tone: "warm, concise, professional"
+triage:
+  # Bias: when unsure, surface (set should_reply true). See DR-8.
+  surface_when_unsure: true
+prefilter:
+  deny_sender_substrings: ["no-reply", "noreply", "do-not-reply", "donotreply"]
+  deny_categories: ["CATEGORY_PROMOTIONS", "CATEGORY_SOCIAL"]
+  allow_senders: []   # always pass these straight to triage
