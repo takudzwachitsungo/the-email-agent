@@ -2,14 +2,22 @@
 
 ## Shape of the system
 
-The agent is a **linear pipeline of swappable stages** running in a **single
-process**, backed by a **single SQLite file** and talking to its language model
-through **one thin provider seam**.
+The agent is a **linear pipeline of swappable stages**, hosted inside a **single
+FastAPI service** (one Uvicorn process), backed by a **PostgreSQL database (with
+pgvector)**, and
+talking to its language model through **one thin provider seam**. It is packaged
+as a **Docker container** so the laptop build and the deployed build are the same
+artifact.
 
-It is deliberately *not* built on an agent framework. The pipeline looks like a
-graph but mechanically it is a sequence of function calls with one branch and a
-state table — a `for` loop with early returns. See
-[Decision: no framework](#decision-no-agent-framework-langgraph-etc) below.
+Two framework distinctions matter, and they don't conflict:
+- It is deliberately *not* built on an **agent-orchestration** framework. The
+  pipeline looks like a graph but mechanically it is a sequence of function calls
+  with one branch and a state table — a `for` loop with early returns.
+- It *is* built as a **FastAPI web service** — not to orchestrate the agent, but
+  to give it a standard, deployable shape from day one (background poller now,
+  webhook endpoints once deployed). See
+  [Decision: FastAPI shell, no agent framework](#decision-fastapi-shell-no-agent-framework)
+  below.
 
 ## The pipeline
 
@@ -61,15 +69,17 @@ testable on its own.
 
 | Module | Does | Depends on |
 |--------|------|-----------|
-| `main.py` | The single-process loop: trigger → pipeline. The kill switch and dry-run flag live here. | every stage |
+| `app.py` | The FastAPI app: starts the poll trigger as a background task, serves webhook + `/health` routes, holds the kill switch and dry-run flag. | trigger, pipeline |
+| `pipeline.py` | The stage sequence (prefilter → triage → draft → record) — the `for`-loop body, trigger-agnostic. | every stage |
+| `trigger/` | Pluggable trigger behind one interface: `poll.py` (background task, default) and `webhook.py` (FastAPI routes for Gmail Pub/Sub + Telegram). | gmail, pipeline |
 | `gmail_client.py` | OAuth, fetch unread, fetch thread, create draft, (send), label. | Google APIs |
 | `ingest.py` | Parse a raw message into a clean `Email` object (body + metadata). | — |
 | `prefilter.py` | Deterministic skip rules. Returns skip + reason or "pass". | config |
 | `triage.py` | Owns the triage system prompt + JSON schema; assembles `(system, user)`; validates output. | provider, config |
 | `draft.py` | Owns the draft system prompt (persona); assembles thread + memory + email; returns reply text. | provider, memory, config |
 | `provider.py` | `complete(system, user, model)` — vendor-agnostic. Knows nothing about email. | LLM SDK |
-| `memory.py` | `get_voice_profile()`, `get_contact_notes(sender)`, `find_similar_replies(text, k)`, `record_correction(...)`. SQLite-backed. | state/SQLite |
-| `state.py` | SQLite read/write; the approval state machine; idempotency. | SQLite |
+| `memory.py` | `get_voice_profile()`, `get_contact_notes(sender)`, `find_similar_replies(text, k)`, `record_correction(...)`. Postgres-backed (pgvector for exemplars). | state / db |
+| `state.py` | Postgres read/write (async); the approval state machine; idempotency. | Postgres |
 | `telegram_bot.py` *(Phase 2)* | Notify + Approve/Edit/Skip + state transitions. | Telegram, state |
 | `config.py` | Typed, validated settings (secrets + behavioral config). | pydantic-settings |
 
@@ -91,7 +101,7 @@ knows how to call a model.
    state machine; on approve/edit, **Send** dispatches via Gmail.
 
 Both AI steps reach the model **only** through the provider seam. State and
-memory share the single SQLite file.
+memory share the same Postgres database.
 
 ## Prompts and instructions
 
@@ -147,27 +157,34 @@ Internal discipline — no new external API.
 - **Secrets hygiene.** All keys in `.env`/config, never in git; `credentials.json`
   and `token.json` git-ignored.
 
-## Triggering & deployment — polling vs webhook
+## Triggering & deployment — one service, pluggable trigger
 
-Webhooks are **not required**. Both integration points have a polling
-alternative that needs no public infrastructure; the choice is a hosting
-decision.
+The app is one FastAPI / Uvicorn service, containerized, running the **same code**
+locally and deployed. Only the **trigger** changes, and it's a config flag:
 
 | Where it runs | Trigger | Approval listener | Public URL? |
 |---------------|---------|-------------------|-------------|
-| Laptop / home box (v1) | in-process poll loop | Telegram `getUpdates` long-poll | No |
-| VPS / Cloud Run (later) | Gmail `watch` + Pub/Sub → HTTPS | Telegram webhook | Yes |
+| Laptop (now) | poll loop (FastAPI background task) | Telegram `getUpdates` long-poll | No |
+| Server / Cloud Run (soon) | Gmail `watch` + Pub/Sub → FastAPI webhook | Telegram webhook | Yes |
 
-The owner is on **Windows**, where `cron` does not exist. v1 uses an in-process
-`while True: process(); sleep(N)` loop (`python main.py`); Windows Task Scheduler
-can wrap it for headless/boot operation later. The trigger and approval listener
-sit behind small interfaces so flipping poll↔webhook later is a swap, not a
-rewrite.
+The poll loop replaces `cron` (the owner is on **Windows**, which has none): it
+runs as a FastAPI lifespan background task, so `uvicorn app:app` is the only thing
+to start — `uv run` locally, the container entrypoint in Docker.
 
-## Decision: no agent framework (LangGraph etc.)
+Webhooks need a public URL, which a laptop behind NAT lacks, so locally we run in
+**poll mode**; the webhook endpoints exist and are exercised once deployed (or via
+a `cloudflared` / `ngrok` tunnel for local testing). Because the trigger and the
+approval listener sit behind small interfaces, flipping poll↔webhook is a **config
+swap, not a rewrite** — which is the whole point of building the service shape up
+front.
 
-**Decision:** Build with plain Python functions + a SQLite state machine. Do not
-adopt LangGraph or any agent framework for the current scope.
+## Decision: FastAPI shell, no agent framework
+
+**Decision:** Build the agent's logic with plain Python functions + a
+database-backed state machine. Do not adopt LangGraph or any
+**agent-orchestration** framework. Do host
+the whole thing inside a **FastAPI** service (the web/application framework — see
+the note at the end of this section).
 
 **Why:**
 - The pipeline is **linear with one branch and a state table** — a `for` loop
@@ -179,13 +196,20 @@ adopt LangGraph or any agent framework for the current scope.
   meant to run unattended for days) and indirection that fights two stated goals:
   *build the smallest thing that works* and *understand every line of the model
   call.*
-- Human-in-the-loop pause/resume is handled by the **SQLite `status` state
-  machine**, which the owner fully controls — no framework checkpointer needed.
+- Human-in-the-loop pause/resume is handled by the **`status` state machine in
+  Postgres**, which the owner fully controls — no framework checkpointer needed.
 
 **Reconsider when:** the chief-of-staff grows into genuine multi-agent
 orchestration. Because stages are clean functions, adopting a framework then is a
 refactor, not a rewrite. The door stays open; we don't walk through it for a
 for-loop.
+
+**On FastAPI (why this isn't a contradiction):** the "no framework" rule is about
+*agent orchestration*, not web serving. The app **is** a FastAPI service (tech
+stack DR-9) — that's how it gets a standard, deployable shape: a background poller
+now, webhook endpoints once deployed, a `/health` route, one Uvicorn process.
+Orchestration stays plain code; hosting uses a real framework. The two are
+independent.
 
 ## Project layout
 
@@ -193,12 +217,19 @@ for-loop.
 email-agent/
 ├── docs/                     # this documentation
 ├── pyproject.toml            # deps + project (managed by uv)
+├── Dockerfile                # uv-based build of the service image
+├── docker-compose.yml        # local/prod run; mounts secrets + db as volumes
 ├── .env                      # secrets (git-ignored)
 ├── credentials.json          # Gmail OAuth client (git-ignored)
 ├── config.yaml               # persona, tone, skip rules, model-per-step
 ├── src/email_agent/
-│   ├── main.py               # the single-process loop; kill switch; dry-run
+│   ├── app.py                # FastAPI app: background poller, webhook + /health, kill switch, dry-run
 │   ├── config.py             # typed settings (pydantic-settings)
+│   ├── pipeline.py           # the stage sequence: prefilter → triage → draft → record
+│   ├── trigger/
+│   │   ├── base.py           # Trigger interface
+│   │   ├── poll.py           # background-task poller (default, works locally)
+│   │   └── webhook.py        # FastAPI routes: Gmail Pub/Sub + Telegram (deployed)
 │   ├── gmail_client.py       # auth, fetch, thread, draft, send, label
 │   ├── ingest.py             # parse → Email object
 │   ├── prefilter.py          # deterministic skip rules
@@ -207,8 +238,11 @@ email-agent/
 │   ├── provider.py           # complete(system, user, model) — vendor-agnostic
 │   ├── memory.py             # voice profile, contact notes, corrections, exemplars
 │   ├── telegram_bot.py       # (Phase 2) notify + approve/edit/skip
-│   └── state.py              # SQLite read/write + state machine + idempotency
-├── tests/
-│   └── fixtures/             # sample emails + expected triage decisions
-└── agent.db                  # SQLite store (git-ignored)
+│   └── state.py              # Postgres read/write + state machine + idempotency
+├── alembic/                  # Postgres schema migrations
+│   └── versions/
+└── tests/
+    └── fixtures/             # sample emails + expected triage decisions
+
+# Postgres data lives in a Docker named volume, not a file in the repo.
 ```

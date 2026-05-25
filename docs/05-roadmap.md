@@ -9,7 +9,13 @@ are scoped here but planned later.
 **Goal:** drafts appear in Gmail; the owner reviews and sends them there.
 
 **Scope:**
-- In-process poll loop against one Gmail inbox (`gmail.modify` scope).
+- **FastAPI service shell** (Uvicorn) with a `/health` endpoint; the **poll
+  trigger** runs as a background task behind the pluggable trigger interface
+  (webhook impl stubbed, filled in as each channel lands). **Dockerfile +
+  docker-compose** (app + a **PostgreSQL/pgvector** service; secrets and the
+  Postgres data on volumes; `Alembic` migrations) — deployable from day one
+  (DR-9).
+- Poll trigger against one Gmail inbox (`gmail.modify` scope).
 - Ingest → clean `Email` object (body + metadata; **no quote-parser**).
 - **Prefilter** — deterministic skip rules before any LLM (DR-7).
 - **Triage** — cheap LLM, strict validated JSON, biased to surface-when-unsure.
@@ -36,7 +42,7 @@ unattended without dropping or duplicating work.
 - Activate the full approval **state machine** (`approved` / `edited` /
   `rejected` / `sent`).
 - **Send-on-approve** via Gmail.
-- Runs in the **same single process** as the loop (one SQLite writer).
+- Runs in the **same single process** as the loop (one DB writer path).
 
 **Known complexity:** **Edit** is the expensive button — inline buttons can't
 capture free text. v1 of Edit should **deep-link to the Gmail draft** rather than
@@ -54,12 +60,14 @@ handle narrow slices on its own.
 - **Voice profile** distilled from sent mail → injected into the draft prompt.
 - **Contact notes** per correspondent.
 - **Corrections** captured at approval/edit time as learning signals.
-- **Semantic exemplar retrieval** via `sqlite-vec` + local embeddings (only when
+- **Semantic exemplar retrieval** via `pgvector` + local embeddings (only when
   the voice profile + hand-picked exemplars stop being enough).
 - **Earned autonomy ladder:** track approval/edit rates per sender & category;
   *offer* auto-handling for a proven narrow slice; expand one segment at a time;
   always revocable; always auditable.
-- Optionally move to a host and switch poll → `watch`/Pub/Sub if wanted.
+- Deploy the container to a host and flip the trigger config poll → webhook
+  (Gmail `watch`/Pub/Sub + Telegram webhook) — the endpoints were built behind the
+  trigger interface in earlier phases, so this is config, not new code.
 
 **Done when:** drafts measurably need less editing over time, and the owner can
 safely grant — and revoke — autonomy for specific trusted segments.

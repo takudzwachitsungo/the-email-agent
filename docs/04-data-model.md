@@ -1,8 +1,9 @@
 # 04 — Data Model
 
-A single SQLite database (`agent.db`) is the source of truth for operational
-state, the approval lifecycle, and (later) long-term memory. Accessed via stdlib
-`sqlite3` — no ORM.
+A single **PostgreSQL** database (with the **pgvector** extension) is the source
+of truth for operational state, the approval lifecycle, and (later) long-term
+memory. Accessed asynchronously via `asyncpg`; schema managed with `Alembic`. It
+runs as a Docker Compose service with its data on a named volume.
 
 ## Operational state — `processed_messages`
 
@@ -58,13 +59,13 @@ Telegram approval gate. `skipped` is its own terminal state so re-runs ignore it
 
 ## Memory model — three layers
 
-Only the first two are needed early. All three live in the same SQLite file.
+Only the first two are needed early. All three live in the same Postgres database.
 
 | Layer | What it is | Where | When |
 |-------|-----------|-------|------|
 | **Operational state** | what's processed; decisions | `processed_messages` (above) | now |
 | **Thread context** | prior messages in the conversation | **fetched from Gmail by `threadId`, not stored** | now (free) |
-| **Long-term memory** | voice, contact facts, corrections, exemplars | SQLite tables below | later |
+| **Long-term memory** | voice, contact facts, corrections, exemplars | Postgres tables below | later |
 
 - **Thread context is not stored.** Gmail already holds the full thread; the
   draft step fetches it on demand by `threadId`. No duplication, always current.
@@ -102,23 +103,34 @@ refined from corrections. A single current row injected into the draft prompt.
 |--------|------|-------|
 | `id` | INTEGER PK | |
 | `profile` | TEXT | the distilled style guide |
-| `updated_at` | TIMESTAMP | |
+| `updated_at` | TIMESTAMPTZ | |
 
-### Semantic memory — the `sqlite-vec` upgrade path
+**`reply_embeddings`** — a vector index over the owner's past sent replies, for
+semantic exemplar retrieval.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | BIGSERIAL PK | |
+| `message_id` | TEXT | source message |
+| `content` | TEXT | the reply text that was embedded |
+| `embedding` | VECTOR(384) | `pgvector` column (dimension per the local model) |
+| `created_at` | TIMESTAMPTZ | |
+
+### Semantic memory — pgvector
 
 `memory.find_similar_replies(text, k)` returns the owner's most similar past
-replies, to inject as few-shot exemplars. Its implementation evolves **behind the
-interface** without callers changing:
+replies, to inject as few-shot exemplars. It is introduced **behind the
+interface** so callers never change:
 
 1. **Phase 1:** no-op — the draft uses a hand-written persona only.
-2. **Interim:** brute-force cosine similarity over stored embeddings (numpy);
-   fine for a few thousand vectors.
-3. **Scale:** an embeddings table with the **`sqlite-vec`** extension for
-   nearest-neighbor queries in SQL.
+2. **Phase 3:** the `reply_embeddings` table above; nearest-neighbor queries in
+   SQL (`ORDER BY embedding <=> :query LIMIT k`), adding an HNSW index once the
+   corpus warrants one.
 
 Embeddings are produced locally with `sentence-transformers` (CPU, free), so the
-entire memory system stays in one local file with no cloud dependency. A
-dedicated vector DB is never needed at personal scale.
+memory layer needs no embedding API. `pgvector` keeps relational state and vectors
+in the **same database** — a dedicated vector DB is never needed at personal
+scale.
 
 > Note: the fastest near-term "sound like me" win is the **voice profile** plus a
 > handful of hand-picked exemplars in the draft prompt — roughly 80% of the

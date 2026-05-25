@@ -17,12 +17,14 @@ revocable step at a time.
 
 ## Design at a glance
 
-- **A linear pipeline of swappable stages**, not a framework-driven agent graph:
-  `poll → prefilter → triage → draft → (approval) → (send)`.
+- **A linear pipeline of swappable stages** (plain code, not a framework-driven
+  agent graph): `poll → prefilter → triage → draft → (approval) → (send)`.
 - **Two firm rules:** nothing is sent without approval (early on), and email is
   untrusted input (content is never mixed with instructions).
-- **Single Python process**, **single SQLite file** for state and memory, **one
-  thin provider seam** so no LLM vendor is hardcoded.
+- **A single containerized FastAPI service** (one Uvicorn process, Docker), with a
+  **pluggable trigger** — poll locally, webhooks once deployed (a config flag).
+- **A PostgreSQL database (with pgvector)** for state and memory, **one thin
+  provider seam** so no LLM vendor is hardcoded.
 - Designed to run **cheaply (free tiers)** and survive **unattended for days**.
 
 ## Documentation
