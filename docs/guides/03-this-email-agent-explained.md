@@ -89,4 +89,18 @@ change to `.env`, not a rewrite. *That* is why you isolate vendors behind a seam
   [`draft.py`](../../src/email_agent/draft.py).
 - Tune behavior without touching code: `config.yaml` (persona, skip rules).
 
+## The research behind the design choices
+
+This project's choices echo published work: the reason->act->observe loop is
+*ReAct* ([Yao et al., 2022](05-references.md#react)); learning from your edits to
+its drafts is the idea behind *Reflexion*
+([Shinn et al., 2023](05-references.md#reflexion)); the planned semantic memory
+uses embeddings ([Sentence-BERT](05-references.md#sbert)) and retrieval
+([RAG](05-references.md#rag)); the "prefer simple patterns over frameworks" stance
+matches Anthropic's [Building Effective Agents](05-references.md#anthropic-agents);
+and the "never mix data with instructions" rule defends against prompt injection
+([Greshake et al., 2023](05-references.md#injection)).
+
+📚 Full bibliography: [References](05-references.md).
+
 ➡️ If a term tripped you up, see the [Glossary](04-glossary.md).

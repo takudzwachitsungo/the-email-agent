@@ -21,11 +21,15 @@ chooses those actions itself rather than following a fixed script.
 
 Our Email Agent sits between a workflow and a full agent: the pipeline is fixed,
 but the **decisions inside it** — "does this email need a reply?", "what should
-the reply say?" — are made by an LLM at run time. That's the agentic part.
+the reply say?" — are made by an LLM at run time. That's the agentic part. (This
+*workflow vs agent* distinction follows Anthropic's
+[Building Effective Agents](05-references.md#anthropic-agents), 2024.)
 
 ## The "agent loop" (the heartbeat of every agent)
 
-Almost every agent, no matter how fancy, is some version of this loop:
+Almost every agent, no matter how fancy, is some version of this loop — the
+*reason -> act -> observe* pattern formalized as **ReAct**
+([Yao et al., 2022](05-references.md#react)):
 
 ```
    ┌─────────────────────────────────────────────┐
@@ -71,7 +75,9 @@ with. You describe the *goal*, not every step.
 - The model **hallucinates** — confidently makes something up. (Our fix: forbid
   inventing facts; leave `[PLACEHOLDERS]`; keep a human in the loop.)
 - The input tries to **hijack** them — "ignore your instructions and…" hidden in
-  an email. (Our fix: never mix instructions with data — see guide 02.)
+  an email. This is **prompt injection** ([Greshake et al., 2023](05-references.md#injection);
+  [OWASP LLM01](05-references.md#owasp)). (Our fix: never mix instructions with
+  data — see guide 02.)
 - They're given **too much autonomy too soon** — acting irreversibly before
   they're trustworthy. (Our fix: drafts-only, earn autonomy gradually.)
 
@@ -83,6 +89,13 @@ with. You describe the *goal*, not every step.
   OpenAI, Anthropic) through an API. You write the loop and tools around it.
 - *"More autonomy is better."* No — autonomy should match how much you trust the
   agent and how reversible its actions are.
+
+## Want to go deeper?
+
+For a broad map of the field, see the agent survey
+([Xi et al., 2023](05-references.md#survey)); for agents that build memories and
+reflect, see *Generative Agents* ([Park et al., 2023](05-references.md#genagents)).
+All sources: [References](05-references.md).
 
 ➡️ Next: [How to build an agent](02-how-to-build-an-agent.md) — the five
 ingredients you actually need.

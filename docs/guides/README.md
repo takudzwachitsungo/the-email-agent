@@ -12,12 +12,13 @@ Read them in order:
 | 02 | [How to build an agent](02-how-to-build-an-agent.md) | The 5 ingredients every agent needs, and how you supply each one |
 | 03 | [This Email Agent, explained](03-this-email-agent-explained.md) | How our project maps those 5 ingredients to real files and the pipeline |
 | 04 | [Glossary](04-glossary.md) | Plain-English definitions of the jargon (LLM, token, prompt, RAG, MCP…) |
+| 05 | [References](05-references.md) | Verified bibliography — the foundational papers (arXiv) and standards the guides cite |
 
 ## The architecture at a glance
 
 The system architecture diagram (also openable/editable on Excalidraw):
 
-> **Editable diagram:** https://excalidraw.com/#json=PE3dr7wh2dwVPGzW10p4x,DHC7KShWaN1whRo4mcpMhw
+> **Editable diagram:** https://excalidraw.com/#json=2hsHsXddJPuLz2l3EyjwW,vfGqXpsSABu0fl1LSPSJjQ
 
 ```
                           FastAPI service (one container)
