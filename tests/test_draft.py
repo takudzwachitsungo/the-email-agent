@@ -26,3 +26,11 @@ async def test_write_passes_persona_and_email_and_returns_text():
     assert "Tuesday" in out
     assert "Tk" in captured["system"]          # persona injected into system prompt
     assert "Are we still on" in captured["user"]  # email body fenced into user msg
+
+
+def test_draft_prompt_guides_descriptive_placeholders():
+    from email_agent.draft import _build_system
+    from email_agent.memory import NullMemory
+    system = _build_system(CFG, NullMemory())
+    assert "square brackets" in system
+    assert "[confirm the exact time]" in system  # a concrete, descriptive example

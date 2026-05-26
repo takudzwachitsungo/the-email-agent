@@ -14,3 +14,7 @@
   sender: "colleague@example.com"
   body: "Could you review my doc before Friday?"
   expect_reply: true
+- subject: "Following up"
+  sender: "colleague@example.com"
+  body: "Hey, just checking in on what we discussed earlier."
+  expect_reply: true

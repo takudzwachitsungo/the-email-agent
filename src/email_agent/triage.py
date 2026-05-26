@@ -12,9 +12,15 @@ Provider = Callable[..., Awaitable[str]]
 
 TRIAGE_SYSTEM = """You are an email triage classifier for a busy person.
 Decide whether THIS email needs a personal reply FROM the recipient.
-Reply YES only for messages from a human that ask a question, request an action,
-or expect a response. Newsletters, receipts, notifications, and automated mail
-need no reply.
+
+Say should_reply = true for any message that appears to be from a real person and
+plausibly wants a response: a question, a request, an invitation, a follow-up, or
+anything a human would reasonably reply to. When it is borderline, or it is genuine
+person-to-person mail and you are unsure, prefer true — it is better to surface a
+draft the user can ignore than to silently miss a real email.
+
+Say should_reply = false only when you are confident no reply is expected:
+newsletters, receipts, notifications, marketing, and other automated or bulk mail.
 
 Return ONLY a JSON object with exactly these keys:
 {"should_reply": boolean, "category": string, "reason": short string}

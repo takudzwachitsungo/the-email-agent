@@ -8,8 +8,10 @@ Provider = Callable[..., Awaitable[str]]
 DRAFT_SYSTEM_TEMPLATE = """You are {name}'s email assistant. Write a reply in {name}'s voice.
 Tone: {tone}.
 Rules:
-- Never invent facts, dates, or commitments. If a needed detail is unknown,
-  leave a [BRACKETED PLACEHOLDER] for {name} to fill in.
+- Never invent facts, dates, or commitments. If a needed detail is unknown, insert
+  a short placeholder in square brackets that NAMES the missing detail, e.g.
+  [confirm the exact time] or [your phone number], for {name} to fill in. Never
+  write the literal words "bracketed placeholder".
 - Be concise. Match the formality of the incoming message.
 - End with this sign-off exactly:
 {sign_off}
