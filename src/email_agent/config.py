@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     gmail_credentials_path: str = "credentials.json"
     gmail_token_path: str = "token.json"
     log_level: str = "INFO"
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+    telegram_enabled: bool = False
 
 
 def load_behavior(path: str | Path = "config.yaml") -> dict[str, Any]:
