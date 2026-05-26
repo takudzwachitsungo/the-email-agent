@@ -18,6 +18,7 @@ async def process_message(
     dry_run: bool,
     triage_model: str,
     draft_model: str,
+    telegram=None,
 ) -> None:
     """Run one message through the full pipeline. Never raises."""
     try:
@@ -55,8 +56,16 @@ async def process_message(
             to=email.sender, subject=f"Re: {email.subject}",
             body=body, thread_id=email.thread_id,
         )
-        await state.record_drafted(email, draft_id=draft_id, triage=result)
-        log.info("drafted %s -> %s", message_id, draft_id)
+        if telegram is not None:
+            tg_id = await telegram.send_approval(
+                sender=email.sender, subject=email.subject, body=body,
+                message_id=email.message_id,
+            )
+            await state.set_pending(email, draft_id=draft_id, tg_message_id=tg_id, triage=result)
+            log.info("pending approval %s -> draft %s (tg %s)", message_id, draft_id, tg_id)
+        else:
+            await state.record_drafted(email, draft_id=draft_id, triage=result)
+            log.info("drafted %s -> %s", message_id, draft_id)
 
     except Exception as exc:  # fail loud, never silent
         log.exception("pipeline error on %s", message_id)

@@ -106,6 +106,39 @@ async def test_dry_run_creates_no_draft():
     assert state.drafts == []
 
 
+class FakeTelegramPipe:
+    def __init__(self):
+        self.approvals = []
+
+    async def send_approval(self, *, sender, subject, body, message_id):
+        self.approvals.append(message_id)
+        return "tg-1"
+
+
+@pytest.mark.asyncio
+async def test_telegram_notify_sets_pending():
+    state = FakeState()
+    gmail = FakeGmail(_email())
+    tg = FakeTelegramPipe()
+
+    async def provider(system, user, *, model, json_mode=False):
+        return '{"should_reply": true, "category": "request", "reason": "asks"}' if json_mode else "body"
+
+    state.pendings = []
+
+    async def set_pending(email, *, draft_id, tg_message_id, triage):
+        state.pendings.append((email.message_id, draft_id, tg_message_id))
+    state.set_pending = set_pending
+
+    from email_agent.memory import NullMemory
+    await process_message("m1", gmail=gmail, state=state, provider=provider,
+                          memory=NullMemory(), cfg=CFG, dry_run=False,
+                          triage_model="t", draft_model="d", telegram=tg)
+    assert tg.approvals == ["m1"]
+    assert state.pendings == [("m1", "draft-123", "tg-1")]
+    assert state.drafts == []
+
+
 @pytest.mark.asyncio
 async def test_error_sets_needs_attention():
     state = FakeState()
