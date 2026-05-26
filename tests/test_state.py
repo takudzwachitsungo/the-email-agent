@@ -35,3 +35,30 @@ async def test_record_drafted_and_needs_attention(session):
     row2 = await repo.get("m2")
     assert row2.status == "needs_attention"
     assert "boom" in row2.error
+
+
+@pytest.mark.asyncio
+async def test_pending_then_sent(session):
+    repo = StateRepository(session)
+    await repo.set_pending(
+        _email(), draft_id="d1", tg_message_id="tg99",
+        triage=TriageResult(should_reply=True, reason="real"),
+    )
+    row = await repo.get("m1")
+    assert row.status == "pending"
+    assert row.draft_id == "d1"
+    assert row.tg_message_id == "tg99"
+
+    await repo.set_sent("m1")
+    assert (await repo.get("m1")).status == "sent"
+
+
+@pytest.mark.asyncio
+async def test_pending_then_rejected(session):
+    repo = StateRepository(session)
+    await repo.set_pending(
+        _email(), draft_id="d1", tg_message_id="tg99",
+        triage=TriageResult(should_reply=True, reason="real"),
+    )
+    await repo.set_rejected("m1")
+    assert (await repo.get("m1")).status == "rejected"

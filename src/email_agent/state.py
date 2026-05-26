@@ -19,6 +19,7 @@ class ProcessedMessage(Base):
     triage_reason: Mapped[str | None] = mapped_column(default=None)
     skip_source: Mapped[str | None] = mapped_column(default=None)
     draft_id: Mapped[str | None] = mapped_column(default=None)
+    tg_message_id: Mapped[str | None] = mapped_column(default=None)
     status: Mapped[str] = mapped_column(default="pending")
     error: Mapped[str | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(
@@ -74,6 +75,26 @@ class StateRepository:
             draft_id=draft_id,
             status="drafted",
         )
+
+    async def set_pending(self, email: Email, *, draft_id: str, tg_message_id: str | None,
+                          triage: TriageResult) -> None:
+        await self._upsert(
+            email.message_id,
+            thread_id=email.thread_id,
+            sender=email.sender,
+            subject=email.subject,
+            triage_decision="reply",
+            triage_reason=triage.reason,
+            draft_id=draft_id,
+            tg_message_id=tg_message_id,
+            status="pending",
+        )
+
+    async def set_sent(self, message_id: str) -> None:
+        await self._upsert(message_id, status="sent")
+
+    async def set_rejected(self, message_id: str) -> None:
+        await self._upsert(message_id, status="rejected")
 
     async def set_needs_attention(self, message_id: str, *, error: str) -> None:
         await self._upsert(message_id, status="needs_attention", error=error)
