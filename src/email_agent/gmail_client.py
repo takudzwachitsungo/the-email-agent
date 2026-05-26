@@ -90,3 +90,29 @@ class GmailClient:
             return draft["id"]
 
         return await asyncio.to_thread(_call)
+
+    async def send_draft(self, draft_id: str) -> None:
+        def _call():
+            self.service.users().drafts().send(userId="me", body={"id": draft_id}).execute()
+
+        await asyncio.to_thread(_call)
+
+    async def delete_draft(self, draft_id: str) -> None:
+        def _call():
+            self.service.users().drafts().delete(userId="me", id=draft_id).execute()
+
+        await asyncio.to_thread(_call)
+
+    async def update_draft(self, *, draft_id: str, to: str, subject: str, body: str,
+                           thread_id: str) -> None:
+        def _call():
+            mime = MIMEText(body)
+            mime["To"] = to
+            mime["Subject"] = subject
+            raw = base64.urlsafe_b64encode(mime.as_bytes()).decode()
+            self.service.users().drafts().update(
+                userId="me", id=draft_id,
+                body={"message": {"raw": raw, "threadId": thread_id}},
+            ).execute()
+
+        await asyncio.to_thread(_call)

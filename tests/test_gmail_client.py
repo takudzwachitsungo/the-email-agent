@@ -46,6 +46,55 @@ async def test_fetch_unread_ids():
     assert ids == ["m1", "m2"]
 
 
+class _Drafts:
+    def __init__(self):
+        self.sent = []
+        self.deleted = []
+        self.updated = []
+
+    def send(self, userId, body):
+        self.sent.append(body)
+        return _Exec({"id": body.get("id"), "labelIds": ["SENT"]})
+
+    def delete(self, userId, id):
+        self.deleted.append(id)
+        return _Exec("")
+
+    def update(self, userId, id, body):
+        self.updated.append((id, body))
+        return _Exec({"id": id})
+
+
+def _service_with_drafts():
+    svc = _FakeService({})
+    drafts = _Drafts()
+    svc._users.drafts = lambda: drafts
+    return svc, drafts
+
+
+@pytest.mark.asyncio
+async def test_send_draft_calls_api():
+    svc, drafts = _service_with_drafts()
+    await GmailClient(service=svc).send_draft("d1")
+    assert drafts.sent == [{"id": "d1"}]
+
+
+@pytest.mark.asyncio
+async def test_delete_draft_calls_api():
+    svc, drafts = _service_with_drafts()
+    await GmailClient(service=svc).delete_draft("d1")
+    assert drafts.deleted == ["d1"]
+
+
+@pytest.mark.asyncio
+async def test_update_draft_calls_api():
+    svc, drafts = _service_with_drafts()
+    await GmailClient(service=svc).update_draft(
+        draft_id="d1", to="a@b.com", subject="Re: hi", body="hello", thread_id="t1")
+    assert drafts.updated[0][0] == "d1"
+    assert "message" in drafts.updated[0][1]
+
+
 @pytest.mark.asyncio
 async def test_get_message_returns_parsed_email():
     raw = {"id": "m1", "threadId": "t1",
