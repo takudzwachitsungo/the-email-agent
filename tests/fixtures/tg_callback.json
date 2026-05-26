@@ -1,0 +1,8 @@
+{
+  "update_id": 1001,
+  "callback_query": {
+    "id": "cb1",
+    "data": "approve:m1",
+    "message": {"message_id": 555, "chat": {"id": 42}}
+  }
+}
