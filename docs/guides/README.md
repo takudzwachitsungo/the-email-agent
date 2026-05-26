@@ -18,7 +18,8 @@ Read them in order:
 
 The system architecture diagram (also openable/editable on Excalidraw):
 
-> **Editable diagram:** https://excalidraw.com/#json=2hsHsXddJPuLz2l3EyjwW,vfGqXpsSABu0fl1LSPSJjQ
+> **Editable diagram:** [`docs/architecture.drawio`](../architecture.drawio) — open with the
+> Draw.io Integration VS Code extension or at app.diagrams.net.
 
 ```
                           FastAPI service (one container)

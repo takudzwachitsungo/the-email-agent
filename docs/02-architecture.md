@@ -2,49 +2,16 @@
 
 ## Architecture diagram
 
-Renders on GitHub. (Colors: orange = external, blue = pipeline stage, purple =
-in-process machinery, green = output, teal = datastore.)
+The editable diagram lives in [`architecture.drawio`](architecture.drawio)
+(draw.io / diagrams.net format). To view/edit it:
+- **In VS Code:** install the **Draw.io Integration** extension
+  (`hediet.vscode-drawio`), then open `docs/architecture.drawio` — it renders and
+  edits inline.
+- **In a browser:** go to app.diagrams.net → *File → Open From → Device* and pick
+  the file.
 
-```mermaid
-flowchart TD
-    Gmail["Gmail inbox"]:::ext
-    LLM["LLM (Groq / OpenAI / ...)"]:::ext
-    TG["Telegram<br/>Approve / Edit / Skip"]:::ext
-    PG[("PostgreSQL + pgvector<br/>state and memory")]:::data
-
-    subgraph SVC["FastAPI service - one container, one process"]
-        direction TB
-        Trig["Poll trigger"]:::proc
-        Ing["Ingest<br/>parse email"]:::pipe
-        Pre["Prefilter<br/>deterministic rules"]:::pipe
-        Tri["Triage<br/>cheap LLM"]:::pipe
-        Drf["Draft<br/>capable LLM"]:::pipe
-        Crt["Create Gmail draft"]:::out
-        Prov["Provider seam"]:::proc
-        Appr["Approval listener"]:::proc
-    end
-
-    Gmail -- poll unread --> Trig --> Ing --> Pre
-    Pre -- looks human --> Tri
-    Tri -- reply needed --> Drf --> Crt
-    Pre -- noise --> PG
-    Tri -- no reply --> PG
-    Tri -. classify .-> Prov
-    Drf -. write .-> Prov
-    Prov <-- OpenAI SDK --> LLM
-    Crt -- draft, never auto-sent --> Gmail
-    Crt -- notify --> Appr
-    Appr <-- card + taps --> TG
-    Appr -- "approve: send / skip: delete" --> Gmail
-    Crt --> PG
-    Appr --> PG
-
-    classDef ext fill:#ffd8a8,stroke:#f59e0b;
-    classDef pipe fill:#a5d8ff,stroke:#2563eb;
-    classDef proc fill:#d0bfff,stroke:#8b5cf6;
-    classDef out fill:#b2f2bb,stroke:#15803d;
-    classDef data fill:#c3fae8,stroke:#0d9488;
-```
+Colors: orange = external, blue = pipeline stage, purple = in-process machinery,
+green = output, teal = datastore.
 
 ## Shape of the system
 

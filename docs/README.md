@@ -18,8 +18,8 @@ anything is sent — earning its way toward handling routine email on its own.
 
 [**docs/guides/**](guides/README.md) — beginner-friendly explainers: what an AI
 agent is, the five ingredients you need to build one, how this project maps to
-them, and a glossary. Includes the system architecture diagram
-([editable on Excalidraw](https://excalidraw.com/#json=2hsHsXddJPuLz2l3EyjwW,vfGqXpsSABu0fl1LSPSJjQ)).
+them, and a glossary. The system architecture diagram is
+[`docs/architecture.drawio`](architecture.drawio) (draw.io format).
 
 ## One-paragraph summary
 

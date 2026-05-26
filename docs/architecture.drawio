@@ -1,0 +1,119 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="Email Agent Architecture" id="email-agent-arch">
+    <mxGraphModel dx="1100" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="Email Agent — System Architecture (Phase 1 + Phase 2)" style="text;html=1;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="520" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="svc" value="FastAPI service — one container, one process" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontColor=#6b46c1;fillColor=#f3effc;strokeColor=#8b5cf6;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="60" width="460" height="520" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gmail" value="Gmail inbox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd8a8;strokeColor=#f59e0b;" vertex="1" parent="1">
+          <mxGeometry x="60" y="250" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="gmailnote" value="you review &amp; send drafts here" style="text;html=1;fontSize=11;fontColor=#757575;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="322" width="180" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="trig" value="Poll trigger" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#8b5cf6;" vertex="1" parent="1">
+          <mxGeometry x="380" y="90" width="200" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="ing" value="Ingest&#10;parse email" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#2563eb;" vertex="1" parent="1">
+          <mxGeometry x="380" y="168" width="200" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="pre" value="Prefilter&#10;deterministic rules (no LLM)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#2563eb;" vertex="1" parent="1">
+          <mxGeometry x="380" y="246" width="200" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="tri" value="Triage&#10;cheap LLM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#2563eb;" vertex="1" parent="1">
+          <mxGeometry x="380" y="324" width="200" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="drf" value="Draft&#10;capable LLM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#2563eb;" vertex="1" parent="1">
+          <mxGeometry x="380" y="402" width="200" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="crt" value="Create Gmail draft" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2f2bb;strokeColor=#15803d;" vertex="1" parent="1">
+          <mxGeometry x="380" y="480" width="200" height="46" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov" value="Provider seam" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#8b5cf6;" vertex="1" parent="1">
+          <mxGeometry x="620" y="324" width="140" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="appr" value="Approval listener" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#8b5cf6;" vertex="1" parent="1">
+          <mxGeometry x="620" y="480" width="140" height="46" as="geometry" />
+        </mxCell>
+
+        <mxCell id="llm" value="LLM&#10;(Groq / OpenAI / ...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd8a8;strokeColor=#f59e0b;" vertex="1" parent="1">
+          <mxGeometry x="860" y="320" width="180" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="tg" value="Telegram&#10;Approve / Edit / Skip" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd8a8;strokeColor=#f59e0b;" vertex="1" parent="1">
+          <mxGeometry x="860" y="478" width="180" height="56" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pg" value="PostgreSQL + pgvector&#10;state and memory" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#c3fae8;strokeColor=#0d9488;" vertex="1" parent="1">
+          <mxGeometry x="400" y="640" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_g_t" value="poll unread" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#f59e0b;" edge="1" parent="1" source="gmail" target="trig">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_t_i" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="trig" target="ing">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_i_p" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="ing" target="pre">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p_t" value="looks human" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="pre" target="tri">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_t_d" value="reply needed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="tri" target="drf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_d_c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="drf" target="crt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_p_pg" value="noise" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#0d9488;dashed=1;" edge="1" parent="1" source="pre" target="pg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_t_pg" value="no reply" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#0d9488;dashed=1;" edge="1" parent="1" source="tri" target="pg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_tri_prov" value="classify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#8b5cf6;dashed=1;" edge="1" parent="1" source="tri" target="prov">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_drf_prov" value="write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#8b5cf6;dashed=1;" edge="1" parent="1" source="drf" target="prov">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_prov_llm" value="OpenAI SDK" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;strokeColor=#f59e0b;" edge="1" parent="1" source="prov" target="llm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_c_g" value="draft (never auto-sent)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#15803d;" edge="1" parent="1" source="crt" target="gmail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c_appr" value="notify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="crt" target="appr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_appr_tg" value="card + taps" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;strokeColor=#f59e0b;" edge="1" parent="1" source="appr" target="tg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_appr_g" value="approve: send / skip: delete" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#f59e0b;" edge="1" parent="1" source="appr" target="gmail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_c_pg" value="record" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#0d9488;" edge="1" parent="1" source="crt" target="pg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_appr_pg" value="state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#0d9488;" edge="1" parent="1" source="appr" target="pg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
