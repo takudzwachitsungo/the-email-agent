@@ -39,6 +39,12 @@ Full design lives in [`docs/`](docs/):
 | [Data Model](docs/04-data-model.md) | SQLite schema, state machine, memory model |
 | [Roadmap](docs/05-roadmap.md) | Phased delivery: core loop → approval → memory & autonomy |
 
+## Running it yourself
+
+Step-by-step setup and three ways to run it (local, Docker, auto-start on login):
+**[docs/RUNNING.md](docs/RUNNING.md)**. TL;DR once set up: `.\run.ps1` (local) or
+`docker compose up -d --build` (background).
+
 ## Branches
 
 - **`main`** — stable / reviewed.

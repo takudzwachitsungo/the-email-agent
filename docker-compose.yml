@@ -1,6 +1,7 @@
 services:
   db:
     image: pgvector/pgvector:pg16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: agent
       POSTGRES_PASSWORD: agent
@@ -17,11 +18,13 @@ services:
 
   app:
     build: .
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql+asyncpg://agent:agent@db:5432/email_agent
+      AGENT_AUTOSTART: "1"
     env_file:
       - path: .env
         required: false

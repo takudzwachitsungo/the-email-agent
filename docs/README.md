@@ -13,6 +13,7 @@ anything is sent — earning its way toward handling routine email on its own.
 | 03 | [Tech Stack](03-tech-stack.md) | The stack and the reasoning behind each significant choice (decision records) |
 | 04 | [Data Model](04-data-model.md) | PostgreSQL schema, the approval state machine, the three-layer memory model and its upgrade path |
 | 05 | [Roadmap](05-roadmap.md) | Phased delivery: core loop → approval → memory & autonomy |
+| — | [**Running it**](RUNNING.md) | Step-by-step: set it up and run it yourself (local / Docker / auto-start) |
 
 ## New to AI agents? Start here
 

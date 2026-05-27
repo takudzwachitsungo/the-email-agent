@@ -14,4 +14,5 @@ COPY . .
 RUN uv sync --frozen --no-dev
 
 EXPOSE 8000
-CMD ["uv", "run", "uvicorn", "email_agent.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Apply migrations (idempotent) then start the service.
+CMD ["sh", "-c", "uv run alembic upgrade head && uv run uvicorn email_agent.app:app --host 0.0.0.0 --port 8000"]
